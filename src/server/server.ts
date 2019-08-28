@@ -1,7 +1,7 @@
 import express = require('express');
+import mongoose = require('mongoose');
 import path = require('path');
-import bodyParser = require('body-parser')
-
+import bodyParser = require('body-parser');
 export default class Server {
     // public express = express;
     public app: express.Application;
@@ -19,9 +19,25 @@ export default class Server {
         this.app.use(express.static(publicPath))
     }
 
-    start(callback: () => void) {
-        this.app.listen(this.port, callback);
+    private connectDB() {
+        mongoose.connect('mongodb://localhost:27017/cafe', {
+            useNewUrlParser: true,
+            useFindAndModify: false,
+            useCreateIndex: true
+        }, (err) => {
+            if (err) {
+                throw err;
 
+            }
+            console.log('Base de Datos online');
+
+        });
+
+    }
+
+    start(callback: () => void) {
+        this.connectDB();
+        this.app.listen(this.port, callback);
         // parse application/x-www-form-urlencoded
         this.app.use(bodyParser.urlencoded({ extended: false }));
         // parse application/json
