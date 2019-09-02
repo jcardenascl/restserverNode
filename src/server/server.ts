@@ -36,7 +36,7 @@ export default class Server {
             useNewUrlParser: true,
             useFindAndModify: false,
             useCreateIndex: true
-        }, (err) => {
+        }, (err: any) => {
             if (err) {
                 throw err;
 

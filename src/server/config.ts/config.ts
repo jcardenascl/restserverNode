@@ -3,6 +3,7 @@
  * Base de Datos
  */
 const inDebug = process.env.NODE_ENV || 'dev';
+process.env.MONGO_URI = process.env.MONGO_URI || '';
 
 export const environment = {
     puerto: process.env.PORT || '3000',
