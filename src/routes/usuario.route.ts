@@ -5,14 +5,20 @@ import bcrypt from 'bcryptjs';
 import _ from 'underscore';
 import { NativeError } from 'mongoose';
 import { IUserModel } from '../models/usuario.model';
+import cors from "cors";
+import { environment } from "../server/config.ts/config";
 
 const UsuarioRouter = Router();
+//use cors middleware
+// UsuarioRouter.use(cors(environment.optionsCors));
+
+
 
 UsuarioRouter.get('/usuario', (req: Request, res: Response) => {
     let desde: number = Number(req.query.desde || 0);
     let limite: number = Number(req.query.limite || 5);
 
-    Usuario.find({})
+    Usuario.find({ estado: true })
         .skip(desde)
         .limit(limite)
         .exec((err: NativeError, usuarios: IUserModel) => {
@@ -22,7 +28,7 @@ UsuarioRouter.get('/usuario', (req: Request, res: Response) => {
                     err
                 })
             }
-            Usuario.countDocuments({}, (err, total) => {
+            Usuario.countDocuments({ estado: true }, (err, total) => {
                 res.json({
                     ok: true,
                     usuario: usuarios,
@@ -72,11 +78,42 @@ UsuarioRouter.put('/usuario/:id', (req: Request, res: Response) => {
     })
 });
 
-UsuarioRouter.delete('/usuario', (req: Request, res: Response) => {
-    res.json('delete usuario');
+UsuarioRouter.delete('/usuario/:id', (req: Request, res: Response) => {
+    let id = req.params.id;
+
+    // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+
+    let cambiaEstado = {
+        estado: false
+    }
+    Usuario.findOneAndUpdate(id, cambiaEstado, { new: true, runValidators: true }, (err, usuarioBorrado) => {
+
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            })
+        }
+        if (!usuarioBorrado) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: 'Usuario no encontrado'
+                }
+            })
+        }
+        res.json({
+            ok: true,
+            usuario: usuarioBorrado
+        })
+    })
+
 });
 UsuarioRouter.get('/about', (req: Request, res: Response) => {
     res.render('about');
 })
+//enable pre-flight
+// UsuarioRouter.options("*", cors(environment.optionsCors));
+
 
 export default UsuarioRouter;

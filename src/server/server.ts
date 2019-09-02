@@ -2,6 +2,8 @@ import express = require('express');
 import mongoose = require('mongoose');
 import path = require('path');
 import bodyParser = require('body-parser');
+import { environment } from "../server/config.ts/config";
+import * as cors from "cors";
 export default class Server {
     // public express = express;
     public app: express.Application;
@@ -18,9 +20,19 @@ export default class Server {
         const publicPath = path.resolve(__dirname, '../public')
         this.app.use(express.static(publicPath))
     }
+    private enableCors() {
+        const options: cors.CorsOptions = {
+            allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
+            credentials: true,
+            methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+            origin: '*',
+            preflightContinue: false
+        };
+
+    }
 
     private connectDB() {
-        mongoose.connect('mongodb://localhost:27017/cafe', {
+        mongoose.connect(environment.urlDB, {
             useNewUrlParser: true,
             useFindAndModify: false,
             useCreateIndex: true

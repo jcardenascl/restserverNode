@@ -1,8 +1,8 @@
 import Server from "./server/server";
 import router from "./routes/usuario.route";
-import puerto from "./server/config.ts/config";
+import { environment } from "./server/config.ts/config";
 
-const port = puerto;
+const port = environment.puerto;
 const server = Server.init(port);
 
 server.start(() => {
