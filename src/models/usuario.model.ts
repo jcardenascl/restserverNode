@@ -27,7 +27,7 @@ export let UserSchema: Schema = new Schema({
     },
     password: {
         type: String,
-        required: [true, 'La contraseña es obligatoria']
+        required: [true, 'La contraseña es obligatoria'],
     },
     img: {
         type: String,

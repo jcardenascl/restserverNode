@@ -7,14 +7,15 @@ import { NativeError } from 'mongoose';
 import { IUserModel } from '../models/usuario.model';
 import cors from "cors";
 import { environment } from "../server/config.ts/config";
+import { AuthM } from '../middlewares/autenticacion';
 
 const UsuarioRouter = Router();
 //use cors middleware
-// UsuarioRouter.use(cors(environment.optionsCors));
+UsuarioRouter.use(cors(environment.optionsCors));
 
 
 
-UsuarioRouter.get('/usuario', (req: Request, res: Response) => {
+UsuarioRouter.get('/', AuthM.verificaToken, (req: Request, res: Response) => {
     let desde: number = Number(req.query.desde || 0);
     let limite: number = Number(req.query.limite || 5);
 
@@ -38,8 +39,15 @@ UsuarioRouter.get('/usuario', (req: Request, res: Response) => {
         })
 });
 
-UsuarioRouter.post('/usuario', (req: Request, res: Response) => {
+UsuarioRouter.post('/', [AuthM.verificaToken, AuthM.verificaAdmin_Role], (req: Request, res: Response) => {
     let body: IUsuario = req.body;
+
+    if (!body.password.replace(/\s/g, '').length) {
+        return res.status(400).json({
+            ok: false,
+            err: 'La contraseña no puede ser solo de espacios en blanco.'
+        })
+    }
     const usuario: IUsuario = new Usuario({
         nombre: body.nombre,
         email: body.email,
@@ -60,7 +68,7 @@ UsuarioRouter.post('/usuario', (req: Request, res: Response) => {
     })
 });
 
-UsuarioRouter.put('/usuario/:id', (req: Request, res: Response) => {
+UsuarioRouter.put('/:id', [AuthM.verificaToken, AuthM.verificaAdmin_Role], (req: Request, res: Response) => {
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
@@ -78,7 +86,7 @@ UsuarioRouter.put('/usuario/:id', (req: Request, res: Response) => {
     })
 });
 
-UsuarioRouter.delete('/usuario/:id', (req: Request, res: Response) => {
+UsuarioRouter.delete('/:id', [AuthM.verificaToken, AuthM.verificaAdmin_Role], (req: Request, res: Response) => {
     let id = req.params.id;
 
     // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
@@ -86,7 +94,7 @@ UsuarioRouter.delete('/usuario/:id', (req: Request, res: Response) => {
     let cambiaEstado = {
         estado: false
     }
-    Usuario.findOneAndUpdate(id, cambiaEstado, { new: true, runValidators: true }, (err, usuarioBorrado) => {
+    Usuario.findByIdAndUpdate(id, cambiaEstado, { new: true, runValidators: true }, (err, usuarioBorrado) => {
 
         if (err) {
             return res.status(400).json({
@@ -102,18 +110,19 @@ UsuarioRouter.delete('/usuario/:id', (req: Request, res: Response) => {
                 }
             })
         }
-        res.json({
+
+        return res.json({
             ok: true,
             usuario: usuarioBorrado
         })
     })
 
 });
-UsuarioRouter.get('/about', (req: Request, res: Response) => {
-    res.render('about');
-})
+// UsuarioRouter.get('/about', (req: Request, res: Response) => {
+//     res.render('about');
+// })
 //enable pre-flight
-// UsuarioRouter.options("*", cors(environment.optionsCors));
+UsuarioRouter.options("*", cors(environment.optionsCors));
 
 
 export default UsuarioRouter;
